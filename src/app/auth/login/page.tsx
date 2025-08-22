@@ -1,9 +1,11 @@
 "use client";
 import { server } from "@/config/server";
-// import { signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { loginSuccess } from "@/lib/store/features/user/userSlice";
 
+import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
+import toast from "react-hot-toast";
+import { useDispatch } from "react-redux";
 
 type LoginInput = {
   email: string;
@@ -14,32 +16,35 @@ type LoginInput = {
 export default function LoginPage() {
   const { register, handleSubmit } = useForm<LoginInput>();
   const router = useRouter();
+  const dispatch = useDispatch();
 
   const onSubmit = async (data: LoginInput) => {
-    // const res = await signIn("credentials", {
-    //   redirect: false,
-    //   email: data.email,
-    //   password: data.password,
-    // });
-
     const res = await fetch(`${server}/auth/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     });
 
-    console.log("Response from signIn:", res);
     try {
-      if (res.ok) {
-        console.log("Login successful:", res);
+      if (res && res.ok) {
+        const result = await res.json();
+        dispatch(loginSuccess({ user: result.user, token: result.token }));
+        toast.success("Login successful");
         router.push("/");
       } else {
-        console.error("Login failed:", res);
+        const result = await res.json();
+        toast.error(result.message);
       }
     } catch (error) {
-      console.error("Error during login:", error);
+      if (error instanceof Error) {
+        toast.error(error.message);
+      } else {
+        toast.error("An unexpected error occurred");
+      }
     }
   };
+
+  // Pa$$w0rd!;
 
   return (
     <div className="max-w-md mx-auto mt-10 p-6 bg-white rounded-lg shadow">

@@ -58,5 +58,3 @@ export default function RegisterPage() {
     </div>
   );
 }
-
-// Pa$$w0rd!;
